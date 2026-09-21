@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Lotes de Materiales | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-boxes text-primary"></i> Lotes de Materiales e Inventario (M1)</h2>
+        <p class="text-muted mb-0">Control de contenido restante y balance de materia prima</p>
+    </div>
+    {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+    <a href="{% url 'operaciones:lote_create' %}" class="btn btn-primary fw-bold shadow-sm">
+        <i class="bi bi-plus-circle"></i> Ingresar Nuevo Lote
+    </a>
+    {% endif %}
+</div>
+
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Código Lote</th>
+                    <th>Material / Aleación</th>
+                    <th>Proveedor</th>
+                    <th class="text-end">Peso Inicial</th>
+                    <th class="text-end">Merma Acumulada</th>
+                    <th class="text-end">Contenido Restante</th>
+                    <th>% Merma</th>
+                    <th>Estudio Previo (M5)</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lote in lotes %}
+                <tr>
+                    <td>
+                        <a href="{% url 'operaciones:lote_detail' lote.pk %}" class="fw-bold text-decoration-none">
+                            {{ lote.codigo_lote }}
+                        </a>
+                        <div class="small text-muted">{{ lote.fecha_ingreso|date:"d/m/Y H:i" }}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">{{ lote.material.codigo }}</span>
+                        <div class="small fw-semibold">{{ lote.material.nombre }}</div>
+                    </td>
+                    <td>{{ lote.proveedor }}</td>
+                    <td class="text-end fw-semibold">{{ lote.peso_inicial_kg }} kg</td>
+                    <td class="text-end text-danger fw-semibold">{{ lote.total_merma_kg }} kg</td>
+                    <td class="text-end">
+                        <span class="badge bg-success fs-6">{{ lote.peso_restante_kg }} kg</span>
+                    </td>
+                    <td>
+                        <div class="progress" style="height: 18px;">
+                            <div class="progress-bar {% if lote.porcentaje_merma_actual > 10 %}bg-danger{% elif lote.porcentaje_merma_actual > 5 %}bg-warning{% else %}bg-info{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ lote.porcentaje_merma_actual }}%;" 
+                                 aria-valuenow="{{ lote.porcentaje_merma_actual }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ lote.porcentaje_merma_actual }}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if lote.estudio_previo %}
+                            {% if lote.estudio_previo.estado == 'APROBADO' %}
+                            <a href="{% url 'operaciones:estudio_detail' lote.estudio_previo.pk %}" class="badge bg-success text-decoration-none">
+                                <i class="bi bi-check-circle"></i> APROBADO
+                            </a>
+                            {% elif lote.estudio_previo.estado == 'EN_REVISION' %}
+                            <a href="{% url 'operaciones:estudio_detail' lote.estudio_previo.pk %}" class="badge bg-warning text-dark text-decoration-none">
+                                <i class="bi bi-clock-history"></i> EN REVISIÓN
+                            </a>
+                            {% else %}
+                            <span class="badge bg-danger">{{ lote.estudio_previo.estado }}</span>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'operaciones:estudio_create' %}" class="badge bg-danger text-decoration-none">
+                                <i class="bi bi-exclamation-octagon"></i> PENDIENTE (Crear)
+                            </a>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'operaciones:lote_detail' lote.pk %}" class="btn btn-outline-secondary" title="Detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+                            <a href="{% url 'operaciones:lote_update' lote.pk %}" class="btn btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if user.is_superuser or user.perfil.rol == 'ENCARGADO' %}
+                            <a href="{% url 'operaciones:lote_delete' lote.pk %}" class="btn btn-outline-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">No existen lotes registrados en el sistema.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Merma #{{ merma.id }} | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'operaciones:merma_list' %}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left"></i> Volver a Mermas
+        </a>
+        <h2 class="fw-bold mb-0">Registro de Merma #{{ merma.id }}</h2>
+        <span class="text-muted">Lote {{ merma.lote.codigo_lote }} - {{ merma.lote.material.nombre }}</span>
+    </div>
+    <div class="d-flex gap-2">
+        {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+        <a href="{% url 'operaciones:merma_update' merma.pk %}" class="btn btn-outline-primary fw-bold">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        {% endif %}
+        {% if user.is_superuser or user.perfil.rol == 'ENCARGADO' %}
+        <a href="{% url 'operaciones:merma_delete' merma.pk %}" class="btn btn-outline-danger fw-bold">
+            <i class="bi bi-trash"></i> Anular Registro
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="fw-bold text-warning mb-3"><i class="bi bi-recycle"></i> Datos Específicos de la Merma (M4)</h5>
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td class="text-muted">Lote de Origen:</td>
+                        <td><strong><a href="{% url 'operaciones:lote_detail' merma.lote.pk %}">{{ merma.lote.codigo_lote }}</a></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Proceso Realizado:</td>
+                        <td><span class="badge bg-info text-dark fs-6">{{ merma.proceso.nombre }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Máquina Utilizada:</td>
+                        <td><strong>{{ merma.maquina.codigo }}</strong> - {{ merma.maquina.nombre }} ({{ merma.maquina.tipo }})</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Tipo de Merma:</td>
+                        <td><span class="badge bg-secondary fs-6">{{ merma.get_tipo_merma_display }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Peso de la Merma:</td>
+                        <td><span class="badge bg-danger fs-5">{{ merma.peso_merma_kg }} kg</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Operador Registrador:</td>
+                        <td><strong>{{ merma.operador.get_full_name|default:merma.operador.username }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Fecha y Hora de Registro:</td>
+                        <td>{{ merma.fecha_registro|date:"d/m/Y H:i:s" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-boxes"></i> Impacto en Inventario y Observaciones</h5>
+            <div class="p-3 bg-light rounded border mb-3">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Peso Inicial del Lote:</span>
+                    <strong>{{ merma.lote.peso_inicial_kg }} kg</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Merma Total Acumulada del Lote:</span>
+                    <strong class="text-danger">{{ merma.lote.total_merma_kg }} kg</strong>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">Contenido Restante Disponible:</span>
+                    <strong class="text-success fs-5">{{ merma.lote.peso_restante_kg }} kg</strong>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-muted small text-uppercase">Causa / Observaciones del Operador:</h6>
+            <div class="p-3 bg-white border rounded">
+                {{ merma.observaciones|default:"Sin observaciones adicionales reportadas." }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

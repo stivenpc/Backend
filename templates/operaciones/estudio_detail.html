@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Estudio Previo Lote {{ estudio.lote.codigo_lote }} | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'operaciones:estudio_list' %}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left"></i> Volver a Estudios
+        </a>
+        <h2 class="fw-bold mb-0">Estudio Previo: Lote {{ estudio.lote.codigo_lote }}</h2>
+        <span class="text-muted">{{ estudio.lote.material.nombre }}</span>
+    </div>
+    <div>
+        {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+            {% if estudio.estado != 'APROBADO' %}
+            <a href="{% url 'operaciones:estudio_aprobar' estudio.pk %}" class="btn btn-success fw-bold px-4">
+                <i class="bi bi-check2-circle"></i> Dictaminar / Aprobar Estudio
+            </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card card-custom p-4 h-100">
+            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-speedometer"></i> Parámetros Metrológicos Verificados</h5>
+            <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td class="text-muted">Lote de Material:</td>
+                        <td><strong><a href="{% url 'operaciones:lote_detail' estudio.lote.pk %}">{{ estudio.lote.codigo_lote }}</a></strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Fecha y Hora de Pesaje:</td>
+                        <td><strong>{{ estudio.fecha_estudio|date:"d/m/Y H:i:s" }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Peso Calibrado en Báscula:</td>
+                        <td><span class="badge bg-primary fs-5">{{ estudio.peso_calibrado_kg }} kg</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Pureza Estimada:</td>
+                        <td><strong>{{ estudio.porcentaje_pureza }} %</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Humedad Superficial:</td>
+                        <td><strong>{{ estudio.porcentaje_humedad }} %</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Tolerancia Máxima Estimada:</td>
+                        <td><span class="badge bg-secondary fs-6">{{ estudio.tolerancia_merma_max_pct }} %</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card card-custom p-4 h-100 border-start {% if estudio.estado == 'APROBADO' %}border-success{% else %}border-warning{% endif %} border-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-shield-check"></i> Estado de Aprobación del Gatekeeper</h5>
+            <div class="mb-3">
+                <label class="text-muted small d-block">Estado Actual:</label>
+                {% if estudio.estado == 'APROBADO' %}
+                    <span class="badge bg-success fs-5"><i class="bi bi-check-circle-fill"></i> APROBADO POR SUPERVISIÓN</span>
+                {% elif estudio.estado == 'EN_REVISION' %}
+                    <span class="badge bg-warning text-dark fs-5"><i class="bi bi-clock-history"></i> PENDIENTE DE REVISIÓN</span>
+                {% else %}
+                    <span class="badge bg-danger fs-5">{{ estudio.get_estado_display }}</span>
+                {% endif %}
+            </div>
+
+            <p class="mb-2"><strong>Responsable del Pesaje:</strong> {{ estudio.responsable_estudio.get_full_name|default:estudio.responsable_estudio.username }}</p>
+            {% if estudio.supervisor_aprobador %}
+            <p class="mb-2"><strong>Supervisor Aprobador:</strong> {{ estudio.supervisor_aprobador.get_full_name|default:estudio.supervisor_aprobador.username }}</p>
+            <p class="mb-2"><strong>Fecha de Aprobación:</strong> {{ estudio.fecha_aprobacion|date:"d/m/Y H:i:s" }}</p>
+            {% endif %}
+
+            {% if estudio.observaciones_metrologicas %}
+            <div class="mt-3 p-3 bg-light rounded border">
+                <small class="fw-bold text-muted text-uppercase d-block mb-1">Observaciones Metrológicas:</small>
+                {{ estudio.observaciones_metrologicas }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

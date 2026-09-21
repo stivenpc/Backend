@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card card-custom">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="mb-0"><i class="bi bi-clipboard-plus"></i> {{ titulo }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info small mb-4">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>Regla de Negocio (M5):</strong> El Estudio Previo certifica las condiciones de pureza y peso calibrado del lote. Una vez registrado, quedará en estado <em>En Revisión</em> hasta que un Supervisor lo apruebe.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Lote a Evaluar *</label>
+                            {{ form.lote }}
+                            {% if form.lote.errors %}<div class="text-danger small">{{ form.lote.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha de Pesaje Calibrado</label>
+                            {{ form.fecha_estudio }}
+                            {% if form.fecha_estudio.errors %}<div class="text-danger small">{{ form.fecha_estudio.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Peso en Báscula Calibrada (kg) *</label>
+                            {{ form.peso_calibrado_kg }}
+                            {% if form.peso_calibrado_kg.errors %}<div class="text-danger small">{{ form.peso_calibrado_kg.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Pureza (%) *</label>
+                            {{ form.porcentaje_pureza }}
+                            {% if form.porcentaje_pureza.errors %}<div class="text-danger small">{{ form.porcentaje_pureza.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Humedad (%) *</label>
+                            {{ form.porcentaje_humedad }}
+                            {% if form.porcentaje_humedad.errors %}<div class="text-danger small">{{ form.porcentaje_humedad.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Tolerancia Máx. Merma (%) *</label>
+                            {{ form.tolerancia_merma_max_pct }}
+                            {% if form.tolerancia_merma_max_pct.errors %}<div class="text-danger small">{{ form.tolerancia_merma_max_pct.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Observaciones Metrológicas / Calibración</label>
+                            {{ form.observaciones_metrologicas }}
+                            {% if form.observaciones_metrologicas.errors %}<div class="text-danger small">{{ form.observaciones_metrologicas.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'operaciones:estudio_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success fw-bold px-4">
+                            <i class="bi bi-save"></i> Registrar Estudio Previo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

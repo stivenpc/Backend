@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | SIGMA Control de Merma{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-speedometer2 text-warning"></i> Panel de Control y Balances</h2>
+        <p class="text-muted mb-0">Gestión de mermas, inventarios metálicos y trazabilidad operativa</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'operaciones:merma_create' %}" class="btn btn-warning text-dark fw-bold shadow-sm">
+            <i class="bi bi-plus-circle"></i> Registrar Merma (M4)
+        </a>
+        <a href="{% url 'operaciones:estudio_create' %}" class="btn btn-outline-primary fw-bold">
+            <i class="bi bi-clipboard-plus"></i> Nuevo Estudio Previo (M5)
+        </a>
+        {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+        <a href="{% url 'operaciones:lote_create' %}" class="btn btn-outline-dark fw-bold">
+            <i class="bi bi-box-seam"></i> Ingresar Lote (M1)
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Tarjetas KPI de Balance de Materia -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-custom p-3 border-start border-primary border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Lotes en Planta</span>
+                    <h3 class="fw-bold mb-0 mt-1">{{ total_lotes }}</h3>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
+                    <i class="bi bi-boxes"></i>
+                </div>
+            </div>
+            <small class="text-muted mt-2 d-block">Inventario activo</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3 border-start border-info border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Materia Prima Ingresada</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-info-emphasis">{{ total_peso_ingresado|floatformat:1 }} <small class="fs-6">kg</small></h3>
+                </div>
+                <div class="bg-info-subtle text-info p-3 rounded-circle fs-4">
+                    <i class="bi bi-arrow-down-square"></i>
+                </div>
+            </div>
+            <small class="text-muted mt-2 d-block">Peso inicial consolidado</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3 border-start border-danger border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Merma Acumulada</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-danger">{{ total_merma|floatformat:1 }} <small class="fs-6">kg</small></h3>
+                </div>
+                <div class="bg-danger-subtle text-danger p-3 rounded-circle fs-4">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+            </div>
+            <small class="text-muted mt-2 d-block">Desperdicio total registrado</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-custom p-3 border-start border-success border-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted small fw-bold text-uppercase">Contenido Útil Restante</span>
+                    <h3 class="fw-bold mb-0 mt-1 text-success">{{ saldo_global|floatformat:1 }} <small class="fs-6">kg</small></h3>
+                </div>
+                <div class="bg-success-subtle text-success p-3 rounded-circle fs-4">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+            </div>
+            <small class="text-muted mt-2 d-block">Saldo disponible en planta</small>
+        </div>
+    </div>
+</div>
+
+{% if estudios_pendientes > 0 %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
+    <div>
+        <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
+        <strong>Atención Supervisión:</strong> Hay <strong>{{ estudios_pendientes }}</strong> Estudio(s) Previo(s) pendiente(s) de aprobación técnica (Gatekeeper M5).
+    </div>
+    <a href="{% url 'operaciones:estudio_list' %}" class="btn btn-warning btn-sm fw-bold">Revisar Estudios</a>
+</div>
+{% endif %}
+
+<div class="row g-4 mt-1">
+    <!-- Tabla de Últimas Mermas Registradas -->
+    <div class="col-lg-7">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-recycle text-warning"></i> Últimas Mermas Específicas Registradas</h5>
+                <a href="{% url 'operaciones:merma_list' %}" class="btn btn-sm btn-outline-secondary">Ver Todas</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Lote</th>
+                            <th>Máquina / Proceso</th>
+                            <th>Tipo</th>
+                            <th class="text-end">Merma (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in ultimas_mermas %}
+                        <tr>
+                            <td class="small text-muted">{{ m.fecha_registro|date:"d/m/Y H:i" }}</td>
+                            <td><a href="{% url 'operaciones:lote_detail' m.lote.pk %}" class="fw-bold text-decoration-none">{{ m.lote.codigo_lote }}</a></td>
+                            <td>
+                                <div><small class="fw-bold">{{ m.maquina.codigo }}</small></div>
+                                <div class="small text-muted">{{ m.proceso.nombre }}</div>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ m.get_tipo_merma_display }}</span></td>
+                            <td class="text-end fw-bold text-danger">{{ m.peso_merma_kg }} kg</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No se han registrado mermas aún.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Lotes y Contenido Restante -->
+    <div class="col-lg-5">
+        <div class="card card-custom h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-boxes text-primary"></i> Estado de Lotes de Material</h5>
+                <a href="{% url 'operaciones:lote_list' %}" class="btn btn-sm btn-outline-secondary">Ver Todos</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Lote</th>
+                            <th>Estudio</th>
+                            <th class="text-end">Saldo Restante</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for l in lotes_recientes %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'operaciones:lote_detail' l.pk %}" class="fw-bold text-decoration-none">{{ l.codigo_lote }}</a>
+                                <div class="small text-muted">{{ l.material.nombre }}</div>
+                            </td>
+                            <td>
+                                {% if l.estudio_previo %}
+                                    {% if l.estudio_previo.estado == 'APROBADO' %}
+                                    <span class="badge bg-success">Aprobado</span>
+                                    {% elif l.estudio_previo.estado == 'EN_REVISION' %}
+                                    <span class="badge bg-warning text-dark">En Revisión</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{{ l.estudio_previo.estado }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">Sin Estudio</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold text-success">{{ l.peso_restante_kg }} kg</span>
+                                <div class="small text-muted">{{ l.porcentaje_merma_actual }}% merma</div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted">No hay lotes ingresados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

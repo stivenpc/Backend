@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card card-custom">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Perfil de Usuario</h5>
+                <span class="badge {% if user.perfil.rol == 'OPERADOR' %}badge-operador{% elif user.perfil.rol == 'SUPERVISOR' %}badge-supervisor{% else %}badge-encargado{% endif %} fs-6">
+                    {{ user.perfil.get_rol_display }}
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="text-muted small">Nombre de Usuario:</label>
+                        <div class="fw-bold fs-5">{{ user.username }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted small">Rol Asignado en Planta (RBAC):</label>
+                        <div class="fw-bold fs-5 text-primary">{{ user.perfil.get_rol_display }}</div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-pencil-square"></i> Actualizar Información</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido</label>
+                            {{ form.last_name }}
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Correo Electrónico</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono de Contacto</label>
+                            {{ form.telefono }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Área / Taller Asignado</label>
+                            {{ form.area }}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="bi bi-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

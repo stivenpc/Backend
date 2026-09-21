@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Registros de Mermas Específicas | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-recycle text-warning"></i> Registro de Mermas Específicas (M4)</h2>
+        <p class="text-muted mb-0">Trazabilidad por proceso, máquina, lote y cantidad de material</p>
+    </div>
+    <a href="{% url 'operaciones:merma_create' %}" class="btn btn-warning text-dark fw-bold shadow-sm">
+        <i class="bi bi-plus-circle"></i> Registrar Nueva Merma
+    </a>
+</div>
+
+<!-- Filtros de Consulta -->
+<div class="card card-custom mb-4 p-3 bg-light border">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <select name="maquina" class="form-select form-select-sm">
+                <option value="">-- Todas las Máquinas --</option>
+                {% for m in maquinas %}
+                <option value="{{ m.id }}" {% if filtro_maquina == m.id|stringformat:"s" %}selected{% endif %}>{{ m.codigo }} - {{ m.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="proceso" class="form-select form-select-sm">
+                <option value="">-- Todos los Procesos --</option>
+                {% for p in procesos %}
+                <option value="{{ p.id }}" {% if filtro_proceso == p.id|stringformat:"s" %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="tipo" class="form-select form-select-sm">
+                <option value="">-- Todos los Tipos de Merma --</option>
+                <option value="ESCORIA" {% if filtro_tipo == "ESCORIA" %}selected{% endif %}>Escoria</option>
+                <option value="VIRUTA" {% if filtro_tipo == "VIRUTA" %}selected{% endif %}>Viruta</option>
+                <option value="REBABA" {% if filtro_tipo == "REBABA" %}selected{% endif %}>Rebaba</option>
+                <option value="DEFECTO" {% if filtro_tipo == "DEFECTO" %}selected{% endif %}>Pieza Defectuosa</option>
+                <option value="VOLATILIZACION" {% if filtro_tipo == "VOLATILIZACION" %}selected{% endif %}>Volatilización</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-secondary btn-sm flex-grow-1"><i class="bi bi-funnel"></i> Filtrar</button>
+            <a href="{% url 'operaciones:merma_list' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+        </div>
+    </form>
+</div>
+
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Fecha / Turno</th>
+                    <th>Lote de Material</th>
+                    <th>Proceso</th>
+                    <th>Máquina Utilizada</th>
+                    <th>Tipo de Merma</th>
+                    <th class="text-end">Peso Merma</th>
+                    <th>Operador</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for merma in mermas %}
+                <tr>
+                    <td class="small">{{ merma.fecha_registro|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'operaciones:lote_detail' merma.lote.pk %}" class="fw-bold text-decoration-none">
+                            {{ merma.lote.codigo_lote }}
+                        </a>
+                        <div class="small text-muted">{{ merma.lote.material.nombre }}</div>
+                    </td>
+                    <td><span class="badge bg-info text-dark">{{ merma.proceso.nombre }}</span></td>
+                    <td>
+                        <strong>{{ merma.maquina.codigo }}</strong>
+                        <div class="small text-muted">{{ merma.maquina.tipo }}</div>
+                    </td>
+                    <td><span class="badge bg-secondary">{{ merma.get_tipo_merma_display }}</span></td>
+                    <td class="text-end fw-bold text-danger fs-6">{{ merma.peso_merma_kg }} kg</td>
+                    <td><small>{{ merma.operador.username }}</small></td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'operaciones:merma_detail' merma.pk %}" class="btn btn-outline-secondary" title="Detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+                            <a href="{% url 'operaciones:merma_update' merma.pk %}" class="btn btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            {% if user.is_superuser or user.perfil.rol == 'ENCARGADO' %}
+                            <a href="{% url 'operaciones:merma_delete' merma.pk %}" class="btn btn-outline-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">No se encontraron registros de mermas bajo los filtros seleccionados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

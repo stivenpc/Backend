@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ titulo }} | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card card-custom">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> {{ titulo }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Código de Lote *</label>
+                            {{ form.codigo_lote }}
+                            {% if form.codigo_lote.errors %}<div class="text-danger small">{{ form.codigo_lote.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Material / Aleación *</label>
+                            {{ form.material }}
+                            {% if form.material.errors %}<div class="text-danger small">{{ form.material.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Peso Inicial (kg) *</label>
+                            {{ form.peso_inicial_kg }}
+                            {% if form.peso_inicial_kg.errors %}<div class="text-danger small">{{ form.peso_inicial_kg.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Proveedor / Origen *</label>
+                            {{ form.proveedor }}
+                            {% if form.proveedor.errors %}<div class="text-danger small">{{ form.proveedor.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Fecha y Hora de Ingreso</label>
+                            {{ form.fecha_ingreso }}
+                            {% if form.fecha_ingreso.errors %}<div class="text-danger small">{{ form.fecha_ingreso.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Observaciones Generales</label>
+                            {{ form.observaciones }}
+                            {% if form.observaciones.errors %}<div class="text-danger small">{{ form.observaciones.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'operaciones:lote_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">
+                            <i class="bi bi-save"></i> Guardar Lote
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

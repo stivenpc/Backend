@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Estudios Previos de Contenido | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1"><i class="bi bi-clipboard-check text-success"></i> Estudios Previos de Contenido (M5)</h2>
+        <p class="text-muted mb-0">Validación obligatoria previa al registro de mermas y procesos</p>
+    </div>
+    <a href="{% url 'operaciones:estudio_create' %}" class="btn btn-success fw-bold shadow-sm">
+        <i class="bi bi-plus-circle"></i> Nuevo Estudio Previo
+    </a>
+</div>
+
+<div class="card card-custom">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr>
+                    <th>Lote Asociado</th>
+                    <th>Material</th>
+                    <th>Fecha Pesaje Calibrado</th>
+                    <th class="text-end">Peso Báscula</th>
+                    <th class="text-center">Pureza / Humedad</th>
+                    <th>Tolerancia Máx.</th>
+                    <th>Responsable</th>
+                    <th>Estado / Supervisor</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudio in estudios %}
+                <tr>
+                    <td>
+                        <a href="{% url 'operaciones:lote_detail' estudio.lote.pk %}" class="fw-bold text-decoration-none">
+                            {{ estudio.lote.codigo_lote }}
+                        </a>
+                    </td>
+                    <td>{{ estudio.lote.material.nombre }}</td>
+                    <td class="small">{{ estudio.fecha_estudio|date:"d/m/Y H:i" }}</td>
+                    <td class="text-end fw-bold">{{ estudio.peso_calibrado_kg }} kg</td>
+                    <td class="text-center small">
+                        <span class="badge bg-light text-dark border">{{ estudio.porcentaje_pureza }}% pur.</span>
+                        <span class="badge bg-light text-dark border">{{ estudio.porcentaje_humedad }}% hum.</span>
+                    </td>
+                    <td>{{ estudio.tolerancia_merma_max_pct }}%</td>
+                    <td><small>{{ estudio.responsable_estudio.username }}</small></td>
+                    <td>
+                        {% if estudio.estado == 'APROBADO' %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> APROBADO</span>
+                            <div class="small text-muted">Por: {{ estudio.supervisor_aprobador.username }}</div>
+                        {% elif estudio.estado == 'EN_REVISION' %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-history"></i> EN REVISIÓN</span>
+                        {% elif estudio.estado == 'RECHAZADO' %}
+                            <span class="badge bg-danger"><i class="bi bi-x-circle"></i> RECHAZADO</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ estudio.estado }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'operaciones:estudio_detail' estudio.pk %}" class="btn btn-outline-secondary" title="Ver Detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+                                {% if estudio.estado != 'APROBADO' %}
+                                <a href="{% url 'operaciones:estudio_aprobar' estudio.pk %}" class="btn btn-success" title="Dictaminar / Aprobar">
+                                    <i class="bi bi-check2-square"></i> Aprobar
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">No existen estudios previos registrados.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

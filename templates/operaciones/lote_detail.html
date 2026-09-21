@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalle de Lote {{ lote.codigo_lote }} | SIGMA Fundición{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'operaciones:lote_list' %}" class="btn btn-outline-secondary btn-sm mb-2">
+            <i class="bi bi-arrow-left"></i> Volver al Listado
+        </a>
+        <h2 class="fw-bold mb-0">Lote: {{ lote.codigo_lote }}</h2>
+        <span class="text-muted">{{ lote.material.nombre }} ({{ lote.material.codigo }})</span>
+    </div>
+    <div class="d-flex gap-2">
+        {% if lote.tiene_estudio_aprobado %}
+        <a href="{% url 'operaciones:merma_create' %}?lote={{ lote.pk }}" class="btn btn-warning text-dark fw-bold">
+            <i class="bi bi-plus-circle"></i> Registrar Merma en este Lote
+        </a>
+        {% endif %}
+        {% if user.is_superuser or user.perfil.rol in 'SUPERVISOR,ENCARGADO' %}
+        <a href="{% url 'operaciones:lote_update' lote.pk %}" class="btn btn-outline-primary fw-bold">
+            <i class="bi bi-pencil"></i> Editar
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card card-custom h-100 p-3">
+            <h6 class="fw-bold text-muted text-uppercase small">Datos Generales</h6>
+            <hr class="mt-1 mb-3">
+            <p class="mb-2"><strong>Proveedor:</strong> {{ lote.proveedor }}</p>
+            <p class="mb-2"><strong>Fecha Ingreso:</strong> {{ lote.fecha_ingreso|date:"d/m/Y H:i" }}</p>
+            <p class="mb-2"><strong>Densidad Aleación:</strong> {{ lote.material.densidad_g_cm3 }} g/cm³</p>
+            <p class="mb-2"><strong>Punto Fusión:</strong> {{ lote.material.punto_fusion_c }} °C</p>
+            {% if lote.observaciones %}
+            <p class="mb-0"><strong>Observaciones:</strong> <span class="text-muted">{{ lote.observaciones }}</span></p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom h-100 p-3 border-start border-primary border-4">
+            <h6 class="fw-bold text-muted text-uppercase small">Balance de Masa (M1)</h6>
+            <hr class="mt-1 mb-3">
+            <div class="d-flex justify-content-between mb-2">
+                <span>Peso Inicial:</span>
+                <strong class="fs-6">{{ lote.peso_inicial_kg }} kg</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-danger">Merma Acumulada:</span>
+                <strong class="text-danger fs-6">- {{ lote.total_merma_kg }} kg</strong>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Contenido Restante:</span>
+                <span class="badge bg-success fs-5">{{ lote.peso_restante_kg }} kg</span>
+            </div>
+            <div class="mt-2 text-end text-muted small">
+                Tasa de desperdicio: <strong>{{ lote.porcentaje_merma_actual }}%</strong>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card card-custom h-100 p-3 border-start border-warning border-4">
+            <h6 class="fw-bold text-muted text-uppercase small">Estudio Previo Obligatorio (M5)</h6>
+            <hr class="mt-1 mb-3">
+            {% if lote.estudio_previo %}
+                <p class="mb-2"><strong>Estado:</strong> 
+                    <span class="badge {% if lote.estudio_previo.estado == 'APROBADO' %}bg-success{% elif lote.estudio_previo.estado == 'EN_REVISION' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        {{ lote.estudio_previo.get_estado_display }}
+                    </span>
+                </p>
+                <p class="mb-2"><strong>Peso Calibrado:</strong> {{ lote.estudio_previo.peso_calibrado_kg }} kg</p>
+                <p class="mb-2"><strong>Pureza / Humedad:</strong> {{ lote.estudio_previo.porcentaje_pureza }}% / {{ lote.estudio_previo.porcentaje_humedad }}%</p>
+                <div class="mt-3">
+                    <a href="{% url 'operaciones:estudio_detail' lote.estudio_previo.pk %}" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="bi bi-file-earmark-text"></i> Ver Estudio Completo
+                    </a>
+                </div>
+            {% else %}
+                <div class="alert alert-danger py-2 small mb-3">
+                    <i class="bi bi-shield-x"></i> Sin estudio previo. No se pueden registrar mermas en este lote.
+                </div>
+                <a href="{% url 'operaciones:estudio_create' %}?lote={{ lote.pk }}" class="btn btn-danger btn-sm w-100 fw-bold">
+                    <i class="bi bi-clipboard-plus"></i> Realizar Estudio Previo
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Mermas Específicas Asociadas al Lote -->
+<div class="card card-custom">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold"><i class="bi bi-recycle text-warning"></i> Historial de Mermas del Lote</h5>
+        <span class="badge bg-secondary">{{ mermas.count }} registro(s)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Proceso</th>
+                    <th>Máquina Utilizada</th>
+                    <th>Tipo de Merma</th>
+                    <th class="text-end">Peso Merma</th>
+                    <th>Operador</th>
+                    <th>Observaciones</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in mermas %}
+                <tr>
+                    <td>{{ m.fecha_registro|date:"d/m/Y H:i" }}</td>
+                    <td><span class="badge bg-info text-dark">{{ m.proceso.nombre }}</span></td>
+                    <td><strong>{{ m.maquina.codigo }}</strong> - {{ m.maquina.nombre }}</td>
+                    <td><span class="badge bg-secondary">{{ m.get_tipo_merma_display }}</span></td>
+                    <td class="text-end fw-bold text-danger">{{ m.peso_merma_kg }} kg</td>
+                    <td>{{ m.operador.username }}</td>
+                    <td class="small text-muted">{{ m.observaciones|default:"-" }}</td>
+                    <td class="text-center">
+                        <a href="{% url 'operaciones:merma_detail' m.pk %}" class="btn btn-outline-secondary btn-sm" title="Ver Detalle">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">No se han registrado mermas en este lote.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
